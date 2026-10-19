@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Trip forecast · Dodgecast</title>
+<meta property="og:title" content="Trip forecast · Dodgecast">
+<meta property="og:description" content="The route, the weather in every town on the way, and the arrival time.">
+<meta property="og:image" content="https://4kjustin.github.io/dodgecast-site/icon.png">
+<link rel="icon" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="style.css">
+<style>
+  :root { --clear: #0ea5e9; --light: #eab308; --rough: #f97316; --severe: #dc2626; }
+  .wrap { padding-top: 20px; }
+  header { margin-bottom: 22px; }
+  #status { display: inline-block; font-weight: 700; background: var(--accent-soft); color: var(--accent); border-radius: 999px; padding: 6px 14px; margin: 4px 0 6px; }
+  #map { height: 340px; border-radius: 16px; border: 1px solid var(--line); margin: 18px 0 8px; background: var(--panel); }
+  @media (prefers-color-scheme: dark) { #map .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.85) contrast(.9); } }
+  .leaflet-container { font: 14px var(--body); }
+  .pin { font-size: 14px; line-height: 22px; text-align: center; width: 28px; height: 28px; border-radius: 50%; border: 3px solid var(--clear); background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.3); }
+  .car { font-size: 22px; line-height: 34px; text-align: center; width: 38px; height: 38px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 6px rgba(56,189,248,.3); }
+  .stops { list-style: none; padding: 0; margin: 10px 0; }
+  .stops li { display: grid; grid-template-columns: 86px 1fr auto auto; align-items: center; gap: 12px; padding: 12px 4px; border-bottom: 1px solid var(--line); }
+  .stops .time { font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .stops .name { font-weight: 700; }
+  .stops .name small { display: block; font-weight: 400; color: var(--muted); }
+  .stops .icon { font-size: 26px; }
+  .stops .temp { font-weight: 700; min-width: 44px; text-align: right; }
+  .sev { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+  .passed { opacity: .5; }
+  .alert { border-left: 5px solid var(--rough); }
+  .alert.s3 { border-left-color: var(--severe); }
+  .alert b { display: block; }
+  .promo { display: flex; gap: 16px; align-items: center; }
+  .promo img { width: 64px; height: 64px; border-radius: 15px; flex: none; }
+  .promo p { margin: 0 0 10px; }
+  #error { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a href="./"><img src="icon.png" alt=""><b>Dodgecast</b></a>
+  </header>
+
+  <div id="error" class="card"><h1 id="err-title">This trip link isn't complete</h1><p id="err-body" class="muted">Ask for the link again, or copy the whole message: the trip is stored in the link itself.</p></div>
+
+  <main id="trip" hidden>
+    <h1 id="title"></h1>
+    <div id="status"></div>
+    <p id="times" class="lead"></p>
+    <div id="map" role="img"></div>
+    <p id="mapnote" class="muted" style="font-size:14px;margin:0"></p>
+
+    <h2 id="along-title"></h2>
+    <ul class="stops" id="stops"></ul>
+    <p id="wxnote" class="muted" style="font-size:14px"></p>
+
+    <section id="alerts-wrap" hidden><h2 id="alerts-title"></h2><div id="alerts"></div></section>
+
+    <div class="card promo">
+      <img src="icon.png" alt="">
+      <div><p id="promo-text"></p><a class="btn" id="promo-btn" href="./"></a></div>
+    </div>
+  </main>
+
+  <footer>
+    <span>© 2026 Dodgecast</span>
+    <a href="privacy.html" id="privacy-link">Privacy Policy</a>
+    <span id="credits">Map © OpenStreetMap contributors · Weather: Open-Meteo</span>
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+// The trip is packed into the link after the # by the Dodgecast app (mobile/src/share.js). Browsers never send
+// that part to the website, so the trip isn't stored anywhere; only this page in your browser reads it.
+const TEXT = {
+  en: {
+    title: 'Drive to {to}', from: 'From {from}. Leaving {dep}, arriving around {arr}.',
+    before: 'Leaves in {d}', on: 'On the road · about {d} to go', near: 'On the road · probably near {place}', after: 'Should have arrived around {arr}',
+    along: 'Weather on the way', alerts: 'Official warnings on the route', place: 'Along the way',
+    sev: ['Good', 'Light weather', 'Rough weather', 'Severe weather'],
+    live: 'Forecast updated {time} for when they reach each place.', snap: 'Forecast from when the trip was shared ({time}).',
+    demo: 'Example trip from Dodgecast\'s demo mode: the storm is simulated.',
+    ex: 'This is an example trip: the snow is made up, to show what a shared trip looks like.',
+    mapnote: 'The car shows roughly where they should be, based on the time.',
+    passes: 'Passing through {time}', inforce: 'in force then', maybe: 'may have ended by then',
+    promo: 'Planned with <b>Dodgecast</b>: it checks the weather on every stretch of a drive and finds the road that stays dry, or the best time to leave. iPhone app coming soon.',
+    promoBtn: 'Plan your own drive', errTitle: 'This trip link isn\'t complete',
+    errBody: 'Ask for the link again, or copy the whole message: the trip is stored in the link itself.',
+    privacy: 'Privacy Policy', credits: 'Map © OpenStreetMap contributors · Weather: Open-Meteo',
+  },
+  fr: {
+    title: 'En route vers {to}', from: 'Départ de {from} à {dep}, arrivée vers {arr}.',
+    before: 'Départ dans {d}', on: 'En route · encore environ {d}', near: 'En route · probablement près de {place}', after: 'Arrivée prévue vers {arr}',
+    along: 'La météo en chemin', alerts: 'Alertes officielles sur le trajet', place: 'En chemin',
+    sev: ['Beau', 'Temps léger', 'Mauvais temps', 'Temps violent'],
+    live: 'Prévisions mises à jour à {time} pour le moment où chaque endroit sera atteint.', snap: 'Prévisions au moment du partage ({time}).',
+    demo: 'Exemple du mode démo de Dodgecast : la tempête est simulée.',
+    ex: 'Ceci est un exemple : la neige est inventée, pour montrer à quoi ressemble un trajet partagé.',
+    mapnote: 'La voiture montre à peu près où la personne devrait être, selon l’heure.',
+    passes: 'Passage {time}', inforce: 'en vigueur à ce moment', maybe: 'pourrait être terminée d’ici là',
+    promo: 'Planifié avec <b>Dodgecast</b> : l’appli vérifie la météo sur chaque tronçon et trouve la route qui reste au sec, ou le meilleur moment pour partir. Bientôt sur iPhone.',
+    promoBtn: 'Planifier mon trajet', errTitle: 'Ce lien de trajet est incomplet',
+    errBody: 'Demandez le lien de nouveau, ou copiez tout le message : le trajet est contenu dans le lien.',
+    privacy: 'Politique de confidentialité', credits: 'Carte © les contributeurs d’OpenStreetMap · Météo : Open-Meteo',
+  },
+};
+const SEV_COLOR = ['var(--clear)', 'var(--light)', 'var(--rough)', 'var(--severe)'];
+const $ = id => document.getElementById(id);
+
+function decode(hash) {
+  const b64 = hash.replace(/-/g, '+').replace(/_/g, '/');
+  const bin = atob(b64 + '='.repeat((4 - (b64.length % 4)) % 4));
+  return JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0))));
+}
+function decodePolyline(str, precision = 1e5) {
+  const pts = []; let i = 0, lat = 0, lon = 0;
+  const next = () => { let r = 0, s = 0, b; do { b = str.charCodeAt(i++) - 63; r |= (b & 0x1f) << s; s += 5; } while (b >= 0x20); return r & 1 ? ~(r >> 1) : r >> 1; };
+  while (i < str.length) { lat += next(); lon += next(); pts.push([lat / precision, lon / precision]); }
+  return pts;
+}
+function wmoIcon(code, day = true) {
+  if (code >= 95) return '⛈️';
+  if ([71, 73, 75, 77, 85, 86].includes(code)) return '🌨️';
+  if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return code >= 61 ? '🌧️' : '🌦️';
+  if (code === 45 || code === 48) return '🌫️';
+  if (code === 3) return '☁️';
+  if (code === 1 || code === 2) return day ? '🌤️' : '☁️';
+  return day ? '☀️' : '🌙';
+}
+function wmoSev(code, precip) {
+  if (code >= 95 || [56, 57, 66, 67, 75, 86].includes(code) || precip >= 7) return 3;
+  if ([63, 65, 71, 73, 77, 81, 82, 85].includes(code) || precip >= 2.5) return 2;
+  if ((code >= 51 && code <= 61) || code === 80 || code === 45 || code === 48) return 1;
+  return 0;
+}
+
+let trip, L1;
+const temp = c => (c == null ? '' : trip.u === 'F' ? `${Math.round(c * 9 / 5 + 32)}°` : `${c}°`);
+try { trip = decode(location.hash.slice(1)); if (trip.v !== 1 || !trip.p) throw new Error('bad'); }
+catch { trip = null; }
+// The example trip on the home page always reads as "on the road now": move its times to the present.
+if (trip?.ex) { const shift = Math.round(Date.now() / 1000) - 35 * 60 - trip.d; trip.d += shift; trip.a += shift; trip.made += shift; }
+const lang = trip?.l === 'fr' || (!trip && navigator.language.startsWith('fr')) ? 'fr' : 'en';
+L1 = TEXT[lang];
+document.documentElement.lang = lang;
+const fill = (s, v) => s.replace(/\{(\w+)\}/g, (m, k) => (k in v ? v[k] : m));
+$('privacy-link').textContent = L1.privacy; $('credits').textContent = L1.credits;
+
+if (!trip) {
+  $('err-title').textContent = L1.errTitle; $('err-body').textContent = L1.errBody;
+  $('error').style.display = 'block';
+} else show();
+
+function clock(sec) {
+  const d = new Date(sec * 1000), today = new Date();
+  const loc = lang === 'fr' ? 'fr-CA' : 'en-US';
+  const time = d.toLocaleTimeString(loc, { hour: 'numeric', minute: '2-digit' });
+  return d.toDateString() === today.toDateString() ? time : `${d.toLocaleDateString(loc, { weekday: 'short' })} ${time}`;
+}
+function dur(min) {
+  min = Math.max(1, Math.round(min));
+  const h = Math.floor(min / 60), m = min % 60;
+  return h ? `${h} h ${String(m).padStart(2, '0')}` : `${m} min`;
+}
+
+function show() {
+  $('trip').hidden = false;
+  document.title = fill(L1.title, { to: trip.to }) + ' · Dodgecast';
+  $('title').textContent = fill(L1.title, { to: trip.to });
+  $('times').textContent = fill(L1.from, { from: trip.f, dep: clock(trip.d), arr: clock(trip.a) });
+  $('along-title').textContent = L1.along;
+  $('promo-text').innerHTML = L1.promo; $('promo-btn').textContent = L1.promoBtn;
+
+  const line = decodePolyline(trip.p);
+  const map = L.map('map', { zoomControl: false, attributionControl: true, scrollWheelZoom: false, zoomSnap: 0.25 });
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(map);
+  L.polyline(line, { color: '#0b2540', weight: 10, opacity: .55 }).addTo(map);
+  L.polyline(line, { color: '#0ea5e9', weight: 6 }).addTo(map);
+  map.fitBounds(L.latLngBounds(line), { padding: [24, 24] });
+  trip.markers = trip.w.map(p => L.marker([p[1], p[2]], { icon: pinIcon(p) }).addTo(map));
+  trip.map = map; trip.line = line;
+
+  renderStops(); renderAlerts(); tick();
+  setInterval(tick, 60000);
+  $('wxnote').textContent = trip.ex ? L1.ex : trip.demo ? L1.demo : fill(L1.snap, { time: clock(trip.made) });
+  if (!trip.demo && Date.now() / 1000 < trip.a) refresh();
+}
+function pinIcon(p) {
+  return L.divIcon({ className: '', iconSize: [28, 28], iconAnchor: [14, 14],
+    html: `<div class="pin" style="border-color:${SEV_COLOR[p[3]]}">${p[4]}</div>` });
+}
+function renderStops() {
+  const now = Date.now() / 1000;
+  $('stops').innerHTML = '';
+  for (const p of trip.w) {
+    const at = trip.d + p[0] * 60, li = document.createElement('li');
+    if (at < now - 300) li.className = 'passed';
+    li.innerHTML = `<span class="time"></span><span class="name"><span></span><small></small></span><span class="icon"></span><span class="temp"></span>`;
+    li.querySelector('.time').textContent = clock(at);
+    li.querySelector('.name span').textContent = p[6] || L1.place;
+    li.querySelector('small').innerHTML = `<i class="sev" style="background:${SEV_COLOR[p[3]]}"></i>` + L1.sev[p[3]];
+    li.querySelector('.icon').textContent = p[4];
+    li.querySelector('.temp').textContent = temp(p[5]);
+    $('stops').append(li);
+  }
+}
+function renderAlerts() {
+  if (!trip.x?.length) return;
+  $('alerts-wrap').hidden = false; $('alerts-title').textContent = L1.alerts;
+  for (const [event, sev, min, active] of trip.x) {
+    const d = document.createElement('div');
+    d.className = `card alert s${sev}`;
+    d.innerHTML = '<b></b><span class="muted"></span>';
+    d.querySelector('b').textContent = `⚠️ ${event}`;
+    d.querySelector('span').textContent = `${fill(L1.passes, { time: clock(trip.d + min * 60) })} · ${active ? L1.inforce : L1.maybe}`;
+    $('alerts').append(d);
+  }
+}
+// Where they should be now: the same share of the route as the share of the drive time gone by.
+function tick() {
+  const now = Date.now() / 1000, total = trip.a - trip.d;
+  let status;
+  if (now < trip.d) status = fill(L1.before, { d: dur((trip.d - now) / 60) });
+  else if (now >= trip.a) status = fill(L1.after, { arr: clock(trip.a) });
+  else {
+    const passed = trip.w.filter(p => trip.d + p[0] * 60 <= now && p[6]).pop();
+    status = passed && passed !== trip.w[0] ? fill(L1.near, { place: passed[6] }) : fill(L1.on, { d: dur((trip.a - now) / 60) });
+  }
+  $('status').textContent = status;
+  const f = Math.min(1, Math.max(0, (now - trip.d) / total));
+  if (f > 0 && f < 1) {
+    const pos = along(trip.line, f);
+    if (!trip.car) trip.car = L.marker(pos, { zIndexOffset: 1000, icon: L.divIcon({ className: '', iconSize: [38, 38], iconAnchor: [19, 19], html: '<div class="car">🚗</div>' }) }).addTo(trip.map);
+    else trip.car.setLatLng(pos);
+    $('mapnote').textContent = L1.mapnote;
+  }
+}
+function along(line, f) {
+  const seg = [];
+  let total = 0;
+  for (let i = 1; i < line.length; i++) { const d = trip.map.distance(line[i - 1], line[i]); seg.push(d); total += d; }
+  let goal = total * f;
+  for (let i = 0; i < seg.length; i++) {
+    if (goal <= seg[i]) { const k = seg[i] ? goal / seg[i] : 0; return [line[i][0] + (line[i + 1][0] - line[i][0]) * k, line[i][1] + (line[i + 1][1] - line[i][1]) * k]; }
+    goal -= seg[i];
+  }
+  return line[line.length - 1];
+}
+// A fresh forecast for each place, at the time they'll reach it (Open-Meteo, free, no key).
+async function refresh() {
+  try {
+    const lat = trip.w.map(p => p[1]).join(','), lon = trip.w.map(p => p[2]).join(',');
+    const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,weather_code,precipitation,is_day&forecast_days=3&timeformat=unixtime`);
+    if (!r.ok) return;
+    const j = await r.json(), list = Array.isArray(j) ? j : [j];
+    trip.w.forEach((p, i) => {
+      const h = list[i]?.hourly, at = trip.d + p[0] * 60;
+      if (!h) return;
+      const k = h.time.findIndex((t, n) => n === h.time.length - 1 || h.time[n + 1] > at);
+      if (k < 0 || at > h.time[h.time.length - 1] + 3600) return;
+      p[3] = wmoSev(h.weather_code[k], h.precipitation[k] || 0);
+      p[4] = wmoIcon(h.weather_code[k], h.is_day[k] !== 0);
+      p[5] = Math.round(h.temperature_2m[k]);
+      trip.markers[i].setIcon(pinIcon(p));
+    });
+    renderStops();
+    $('wxnote').textContent = fill(L1.live, { time: clock(Date.now() / 1000) });
+  } catch {}
+}
+</script>
+</body>
+</html>

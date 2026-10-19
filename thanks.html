@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thanks for the feedback</title>
+<link rel="icon" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a href="./"><img src="icon.png" alt=""><b>Dodgecast</b></a>
+    <nav><a href="feedback.html">Feedback</a><a href="support.html">Support</a><a href="privacy.html">Privacy</a></nav>
+  </header>
+  <h1>Thank you!</h1>
+  <p class="lead">Your answers are on their way. They really do decide what gets built next.</p>
+  <script>
+    // Coming from the launch-list form on the home page rather than the feedback form.
+    if (new URLSearchParams(location.search).has('list')) {
+      document.querySelector('h1').textContent = 'You’re on the list!';
+      document.querySelector('.lead').textContent = 'We’ll send you one email when Dodgecast is on the App Store.';
+    }
+  </script>
+  <p><a class="btn" href="https://claude.ai/artifact/6XJ7bHNayhmcPMTh4MVWRs">Back to the demo</a></p>
+  <footer>
+    <span>© 2026 Dodgecast</span>
+    <a href="support.html">Support</a>
+    <a href="privacy.html">Privacy Policy</a>
+    <a href="terms.html">Terms of Use</a>
+  </footer>
+</div>
+</body>
+</html>
