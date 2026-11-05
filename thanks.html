@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en" data-title-fr="Merci!">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thanks for the feedback</title>
+<link rel="icon" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<link rel="stylesheet" href="style.css">
+<script src="lang.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a href="./"><img src="icon.png" alt=""><b>Dodgecast</b></a>
+    <nav><a href="feedback.html"><span class="en">Feedback</span><span class="fr">Votre avis</span></a><a href="support.html"><span class="en">Support</span><span class="fr">Soutien</span></a><a href="privacy.html"><span class="en">Privacy</span><span class="fr">Confidentialité</span></a></nav>
+  </header>
+  <div id="sent">
+    <h1><span class="en">Thank you!</span><span class="fr">Merci!</span></h1>
+    <p class="lead"><span class="en">Your answers are on their way. They really do decide what gets built next.</span><span class="fr">Vos réponses sont en route. Ce sont vraiment elles qui décident de la suite.</span></p>
+  </div>
+  <div id="listed" hidden>
+    <h1><span class="en">You’re on the list!</span><span class="fr">Vous êtes sur la liste!</span></h1>
+    <p class="lead"><span class="en">We’ll send you one email when Dodgecast is on the App Store.</span><span class="fr">Nous vous enverrons un seul courriel quand Dodgecast sera sur l’App Store.</span></p>
+  </div>
+  <script>
+    // Coming from the launch-list form on the home page rather than the feedback form.
+    if (new URLSearchParams(location.search).has('list')) {
+      document.getElementById('sent').hidden = true;
+      document.getElementById('listed').hidden = false;
+    }
+  </script>
+  <p><a class="btn" href="https://claude.ai/artifact/6XJ7bHNayhmcPMTh4MVWRs"><span class="en">Back to the demo</span><span class="fr">Retour à la démo</span></a></p>
+  <footer>
+    <span>© 2026 Dodgecast</span>
+    <a href="support.html">Support</a>
+    <a href="privacy.html"><span class="en">Privacy Policy</span><span class="fr">Politique de confidentialité</span></a>
+    <a href="terms.html"><span class="en">Terms of Use</span><span class="fr">Conditions d’utilisation</span></a>
+  </footer>
+</div>
+</body>
+</html>

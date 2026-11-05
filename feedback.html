@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en" data-title-fr="Votre avis sur Dodgecast">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dodgecast Feedback</title>
+<meta name="description" content="Four quick questions about Dodgecast. Your answers decide what gets built.">
+<link rel="icon" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<link rel="stylesheet" href="style.css">
+<script src="lang.js"></script>
+<style>
+  form { display: grid; gap: 26px; }
+  fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 10px; }
+  legend { font-weight: 700; margin-bottom: 8px; padding: 0; }
+  .opts { display: flex; flex-wrap: wrap; gap: 8px; }
+  .opts label { border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 9px 15px; cursor: pointer; display: inline-flex; gap: 8px; align-items: center; }
+  .opts label:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+  .opts input { accent-color: var(--accent); }
+  textarea, input[type=email], input[type=text] { width: 100%; font: inherit; color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+  textarea { min-height: 110px; resize: vertical; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button { font: inherit; border: 0; cursor: pointer; justify-self: start; }
+  .hp { position: absolute; left: -5000px; }
+  .small { font-size: 14px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a href="./"><img src="icon.png" alt=""><b>Dodgecast</b></a>
+    <nav><a href="feedback.html"><span class="en">Feedback</span><span class="fr">Votre avis</span></a><a href="support.html"><span class="en">Support</span><span class="fr">Soutien</span></a><a href="privacy.html"><span class="en">Privacy</span><span class="fr">Confidentialité</span></a></nav>
+  </header>
+
+  <h1><span class="en">Would you use Dodgecast?</span><span class="fr">Utiliseriez-vous Dodgecast?</span></h1>
+  <p class="lead"><span class="en">Four quick questions. Your answers go straight to the person building Dodgecast and decide what gets built next.</span><span class="fr">Quatre petites questions. Vos réponses vont directement à la personne qui crée Dodgecast et décident de la suite.</span></p>
+
+  <!-- Answers are emailed to Dodgecast by FormSubmit (formsubmit.co); there's no server of our own. -->
+  <form action="https://formsubmit.co/dodgecast707@gmail.com" method="POST">
+    <input type="hidden" name="_subject" value="New Dodgecast feedback">
+    <input type="hidden" name="_template" value="table">
+    <input type="hidden" name="_captcha" value="false">
+    <input type="hidden" name="_next" value="https://4kjustin.github.io/dodgecast-site/thanks.html">
+    <input type="text" name="_honey" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+    <fieldset>
+      <legend><span class="en">How often do you drive somewhere bad weather could affect you?</span><span class="fr">À quelle fréquence conduisez-vous là où le mauvais temps pourrait vous nuire?</span></legend>
+      <div class="opts">
+        <label><input type="radio" name="How often they drive in bad weather" value="Every day" required><span class="en">Every day</span><span class="fr">Tous les jours</span></label>
+        <label><input type="radio" name="How often they drive in bad weather" value="Every week"><span class="en">Every week</span><span class="fr">Toutes les semaines</span></label>
+        <label><input type="radio" name="How often they drive in bad weather" value="A few times a year"><span class="en">A few times a year</span><span class="fr">Quelques fois par année</span></label>
+        <label><input type="radio" name="How often they drive in bad weather" value="Rarely"><span class="en">Rarely</span><span class="fr">Rarement</span></label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend><span class="en">Would you use Dodgecast?</span><span class="fr">Utiliseriez-vous Dodgecast?</span></legend>
+      <div class="opts">
+        <label><input type="radio" name="Would they use it" value="Yes, definitely" required><span class="en">Yes, definitely</span><span class="fr">Oui, certainement</span></label>
+        <label><input type="radio" name="Would they use it" value="Maybe"><span class="en">Maybe</span><span class="fr">Peut-être</span></label>
+        <label><input type="radio" name="Would they use it" value="Probably not"><span class="en">Probably not</span><span class="fr">Probablement pas</span></label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend><span class="en">Planning stays free. After a 7-day free trial, would you pay $4.99 a month (or $29.99 a year) for Pro, with storm alerts while you drive?</span><span class="fr">La planification reste gratuite. Après un essai gratuit de 7 jours, paieriez-vous 4,99 $ par mois (ou 29,99 $ par année) pour Pro, avec des alertes de tempête en roulant?</span></legend>
+      <div class="opts">
+        <label><input type="radio" name="Would they pay for Pro" value="Yes" required><span class="en">Yes, I'd pay for Pro</span><span class="fr">Oui, je paierais pour Pro</span></label>
+        <label><input type="radio" name="Would they pay for Pro" value="Maybe, if it works well"><span class="en">Maybe, if it works well</span><span class="fr">Peut-être, si ça fonctionne bien</span></label>
+        <label><input type="radio" name="Would they pay for Pro" value="No, free version only"><span class="en">No, I'd use the free version</span><span class="fr">Non, j’utiliserais la version gratuite</span></label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend><label for="ideas"><span class="en">What would make it better? (optional)</span><span class="fr">Qu’est-ce qui l’améliorerait? (facultatif)</span></label></legend>
+      <textarea id="ideas" name="Ideas" placeholder="Features, worries, how you'd use it" data-fr-placeholder="Fonctions, inquiétudes, votre utilisation"></textarea>
+    </fieldset>
+
+    <fieldset>
+      <legend><label for="where"><span class="en">Where do you mostly drive? (optional)</span><span class="fr">Où conduisez-vous surtout? (facultatif)</span></label></legend>
+      <input id="where" type="text" name="Where they drive" placeholder="e.g. Ontario highways, Calgary commute, Montana road trips" data-fr-placeholder="p. ex. autoroute 40, trajet vers Montréal, voyages au Québec">
+    </fieldset>
+
+    <fieldset>
+      <legend><label for="email"><span class="en">Want to know when Dodgecast launches? (optional)</span><span class="fr">Voulez-vous savoir quand Dodgecast sortira? (facultatif)</span></label></legend>
+      <input id="email" type="email" name="email" placeholder="you@example.com" data-fr-placeholder="vous@exemple.com" autocomplete="email">
+      <span class="small"><span class="en">Only used to tell you when Dodgecast is available. No spam, never shared.</span><span class="fr">Utilisé seulement pour vous dire quand Dodgecast sera offert. Aucun pourriel, jamais partagé.</span></span>
+    </fieldset>
+
+    <button type="submit" class="btn"><span class="en">Send my answers</span><span class="fr">Envoyer mes réponses</span></button>
+    <p class="small"><span class="en">Your answers are emailed to Dodgecast through FormSubmit. See our <a href="privacy.html">privacy policy</a>.</span><span class="fr">Vos réponses sont envoyées à Dodgecast par courriel au moyen de FormSubmit. Voir notre <a href="privacy.html">politique de confidentialité</a>.</span></p>
+  </form>
+
+  <footer>
+    <span>© 2026 Dodgecast</span>
+    <a href="support.html"><span class="en">Support</span><span class="fr">Soutien</span></a>
+    <a href="privacy.html"><span class="en">Privacy Policy</span><span class="fr">Politique de confidentialité</span></a>
+    <a href="terms.html"><span class="en">Terms of Use</span><span class="fr">Conditions d’utilisation</span></a>
+  </footer>
+</div>
+</body>
+</html>
